@@ -5,90 +5,155 @@ const resetDoc = async (doc: any) => {
     return await getDoc()
 }
 
-const getDoc = async ()=>{
+const getDoc = async () => {
     return await db.collection("movies").doc("matrix").get()
 }
 
-describe.skip("firebase set", () => {
+describe("firebase set", () => {
+    const orig = {
+        title: "Matrix",
+        characters: {
+            "Neo": "Kianu Rives",
+            "Morpheus": "Laurence Fishburne"
+        },
+        rewards: {
+            "oscars": 2,
+            "golden globes": 1
+        },
+        tags: ["scifi", "suspense"]
+    }
+
     let doc: FirebaseFirestore.DocumentSnapshot
 
     beforeEach(async () => {
-        doc = await resetDoc({
-            title: "Matrix",
-            characters: {
-                "Neo": "Kianu Rives",
-                "Morpheus": "Laurence Fishburne"
-            }
-        })
-
+        doc = await resetDoc(orig)
     })
 
-    test("set will override the whole document", async () => {
-        let updates = {
+    test("set", async () => {
+        let update = {
             characters: {
                 "Trinity": "That Actress"
             }
         }
-        await doc.ref.set(updates)
+        await doc.ref.set(update)
 
-        let newDoc =  (await getDoc()).data()!
+        let newDoc = (await getDoc()).data()!
 
-        expect(newDoc).toStrictEqual(updates)
+        expect(newDoc).toStrictEqual(update)
     })
 
-    test("set with merge will merge docs and nested maps", async () => {
-        let updates = {
+    test("set with merge", async () => {
+        let update = {
             characters: {
                 "Trinity": "That Actress"
-            }
+            },
+            rewards: {},
+            tags: ["classic"]
         }
-        await doc.ref.set(updates, {merge:true})
+        await doc.ref.set(update, { merge: true })
 
-        let newDoc =  (await getDoc()).data()!
+        let newDoc = (await getDoc()).data()!
 
         expect(newDoc).toStrictEqual({
-            title: "Matrix",
+            ...orig,
             characters: {
                 "Neo": "Kianu Rives",
                 "Morpheus": "Laurence Fishburne",
                 "Trinity": "That Actress"
-            }
+            },
+            rewards: update.rewards,
+            tags: update.tags
         })
     })
 
-    test("update will merge docs but will override nested maps", async () => {
-        let updates = {
+    test("set with mergeFields with field content given", async () => {
+        let update = {
+            title: "Matrix 2",
             characters: {
                 "Trinity": "That Actress"
-            }
+            },
+            rewards: {},
+            tags: ["classic"]
         }
+        await doc.ref.set(update, { mergeFields: ["characters", "tags"] })
 
-        await doc.ref.update(updates)
-
-        let newDoc =  (await getDoc()).data()!
+        let newDoc = (await getDoc()).data()!
 
         expect(newDoc).toStrictEqual({
-            title: "Matrix",
-            characters: {
-                "Trinity": "That Actress"
-            }
+            ...orig,
+            characters: update.characters,
+            tags: update.tags
         })
     })
 
-    test("update will selectively update nested map value with dot notation", async () => {
-        let updates = {
+    test("set with mergeFields with field content empty", async () => {
+        let update = {
+            title: "Matrix 2",
+            characters: {},
+            rewards: {},
+            tags: []
+        }
+        await doc.ref.set(update, { mergeFields: ["characters", "tags"] })
+
+        let newDoc = (await getDoc()).data()!
+
+        expect(newDoc).toStrictEqual({
+            ...orig,
+            characters: update.characters,
+            tags: update.tags
+        })
+    })
+
+    test("update with content", async () => {
+        let update = {
+            characters: {
+                "Trinity": "That Actress"
+            },
+            tags: ["classic"]
+        }
+
+        await doc.ref.update(update)
+
+        let newDoc = (await getDoc()).data()!
+
+        expect(newDoc).toStrictEqual({
+            ...orig,
+            characters: update.characters,
+            tags: update.tags
+        })
+    })
+
+    test("update with no content", async () => {
+        let update = {
+            characters: {},
+            tags: []
+        }
+
+        await doc.ref.update(update)
+
+        let newDoc = (await getDoc()).data()!
+
+        expect(newDoc).toStrictEqual({
+            ...orig,
+            characters: update.characters,
+            tags: update.tags
+        })
+    })
+
+    test("update with nested map and dot notation", async () => {
+        let update = {
             "characters.Neo": "Keanu Reeves"
         }
 
-        await doc.ref.update(updates)
+        await doc.ref.update(update)
 
-        let newdoc =  (await getDoc()).data()!
+        let newdoc = (await getDoc()).data()!
 
         expect(newdoc).toStrictEqual({
-            title: "Matrix",
+            ...orig,
             characters: {
+                ...orig.characters,
                 "Neo": "Keanu Reeves",
-                "Morpheus": "Laurence Fishburne"
             }
         })
     })

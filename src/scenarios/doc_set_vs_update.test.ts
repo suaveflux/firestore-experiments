@@ -1,4 +1,4 @@
-import { db } from "../repos/db";
+import { db } from "../utils/db";
 
 const resetDoc = async (doc: any) => {
     await db.collection("movies").doc("matrix").set(doc)
@@ -10,10 +10,10 @@ const getDoc = async ()=>{
 }
 
 describe.skip("firebase set", () => {
-    let matrix: FirebaseFirestore.DocumentSnapshot
+    let doc: FirebaseFirestore.DocumentSnapshot
 
     beforeEach(async () => {
-        matrix = await resetDoc({
+        doc = await resetDoc({
             title: "Matrix",
             characters: {
                 "Neo": "Kianu Rives",
@@ -29,11 +29,11 @@ describe.skip("firebase set", () => {
                 "Trinity": "That Actress"
             }
         }
-        await matrix.ref.set(updates)
+        await doc.ref.set(updates)
 
-        let newMatrix =  (await getDoc()).data()!
+        let newDoc =  (await getDoc()).data()!
 
-        expect(newMatrix).toStrictEqual(updates)
+        expect(newDoc).toStrictEqual(updates)
     })
 
     test("set with merge will merge docs and nested maps", async () => {
@@ -42,11 +42,11 @@ describe.skip("firebase set", () => {
                 "Trinity": "That Actress"
             }
         }
-        await matrix.ref.set(updates, {merge:true})
+        await doc.ref.set(updates, {merge:true})
 
-        let newMatrix =  (await getDoc()).data()!
+        let newDoc =  (await getDoc()).data()!
 
-        expect(newMatrix).toStrictEqual({
+        expect(newDoc).toStrictEqual({
             title: "Matrix",
             characters: {
                 "Neo": "Kianu Rives",
@@ -63,11 +63,11 @@ describe.skip("firebase set", () => {
             }
         }
 
-        await matrix.ref.update(updates)
+        await doc.ref.update(updates)
 
-        let newMatrix =  (await getDoc()).data()!
+        let newDoc =  (await getDoc()).data()!
 
-        expect(newMatrix).toStrictEqual({
+        expect(newDoc).toStrictEqual({
             title: "Matrix",
             characters: {
                 "Trinity": "That Actress"
@@ -80,11 +80,11 @@ describe.skip("firebase set", () => {
             "characters.Neo": "Keanu Reeves"
         }
 
-        await matrix.ref.update(updates)
+        await doc.ref.update(updates)
 
-        let newMatrix =  (await getDoc()).data()!
+        let newdoc =  (await getDoc()).data()!
 
-        expect(newMatrix).toStrictEqual({
+        expect(newdoc).toStrictEqual({
             title: "Matrix",
             characters: {
                 "Neo": "Keanu Reeves",

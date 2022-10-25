@@ -9,7 +9,7 @@ const getDoc = async () => {
     return await db.collection("movies").doc("matrix").get()
 }
 
-describe("firebase set", () => {
+describe.skip("firebase set", () => {
     const orig = {
         title: "Matrix",
         characters: {
